@@ -39,6 +39,8 @@ public class LocationActivity extends AppCompatActivity implements GoogleApiClie
 
     GoogleApiClient mGoogleApiClient;
 
+    private static final int LOC_REQUEST_CODE = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,15 +71,15 @@ public class LocationActivity extends AppCompatActivity implements GoogleApiClie
 
     /** Helper method for getting location **/
     public void getLocation(View v){
-        if(mGoogleApiClient != null) {
-            Location loc = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            if(loc != null) {
-
-                ((TextView) findViewById(R.id.txt_lat)).setText("" + loc.getLatitude());
-                ((TextView) findViewById(R.id.txt_lng)).setText("" + loc.getLongitude());
-            }else
-                Log.v(TAG, "Last loccation is null");
-        }
+//        if(mGoogleApiClient != null) {
+//            Location loc = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+//            if(loc != null) {
+//
+//                ((TextView) findViewById(R.id.txt_lat)).setText("" + loc.getLatitude());
+//                ((TextView) findViewById(R.id.txt_lng)).setText("" + loc.getLongitude());
+//            }else
+//                Log.v(TAG, "Last loccation is null");
+//        }
     }
 
 
@@ -119,7 +121,33 @@ public class LocationActivity extends AppCompatActivity implements GoogleApiClie
         request.setFastestInterval(5000);
         request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, request, this);
+        int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+        if(permission == PackageManager.PERMISSION_GRANTED){
+            //yay! Have permission, do the thing
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, request, this);
+        }
+        else{
+            //if(ActivityCompat.shouldShowRequestPermissionRationale(...))
+
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOC_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch(requestCode){
+            case LOC_REQUEST_CODE: { //if asked for location
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    onConnected(null); //should work :/
+                }
+            }
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        }
+
     }
 
     @Override
